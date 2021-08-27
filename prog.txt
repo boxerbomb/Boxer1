@@ -1,0 +1,705 @@
+LDB H(PROG)
+CPY 01 04
+LDB L(PROG)
+CPY 01 05
+JMP FF
+
+.WELCOME
+"WELCOME"
+
+.BAD
+"BAD"
+
+.QUITMESS
+"QUIT"
+
+
+
+
+
+-- PRINT FUNCTION
+-- RetAddrHigh->QR[00]   RetAddreLow->QR[01]   StrStartHigh->QR[02] StrStartLow->[03]
+.PRINT
+--Loads quickram 2 and 3 to HL
+LDQ 02
+CPY 00 04
+LDQ 03
+CPY 00 05
+--LOAD A WITH HL
+LDA 00
+--STORE A FOR LATER at quickram 4
+STQ 04
+-- Address for end of program jump
+-- 00 and 01 for PRESET jump back point
+LDQ 00
+CPY 00 04
+LDQ 01
+CPY 00 05
+--PUT A BACK FROM QUICK RAM 4
+LDQ 04
+LDB 2B --2B is the endn of line
+JMP 00 --JMP TO END IF EQUAL
+STQ FF -- write char that isn't FF to TERM
+LDQ 03 -- Char Low Val addre quick ram
+-- Put 1 into B
+LDB 01
+-- Copies Incrtemented L to A
+CPY 07 00
+--Store the newly incremented L at the place in quickram
+STQ 03
+LDB H(PRINT)
+CPY 01 04
+LDB L(PRINT)
+CPY 01 05
+JMP FF
+
+
+.QUIT
+STQ FE
+
+LDB H(PREINPUT)
+CPY 01 00
+STQ 00
+LDB L(PREINPUT)
+CPY 01 00
+STQ 01
+
+LDB H(QUITMESS)
+CPY 01 00
+STQ 02
+LDB L(QUITMESS)
+CPY 01 00
+STQ 03
+
+LDB H(PRINT)
+CPY 01 04
+LDB L(PRINT)
+CPY 01 05
+JMP FF
+
+
+.DUMP
+LDB H(DUMPNEXT)
+CPY 01 00
+STQ 00
+LDB L(DUMPNEXT)
+CPY 01 00
+STQ 01
+
+LDB 40 --digit1+2 Start HIGH
+CPY 01 00
+STQ 02
+
+LDB 04 --digit1+2 Start LOW
+CPY 01 00
+STQ 03
+
+LDB H(STRINGTONUM)
+CPY 01 04
+LDB L(STRINGTONUM)
+CPY 01 05
+JMP FF
+
+.DUMPNEXT
+LDQ 05 --Load First 8 bits total
+STQ 06 --Store this in safe keeping
+
+LDB H(DUMPEND)
+CPY 01 00
+STQ 00
+LDB L(DUMPEND)
+CPY 01 00
+STQ 01
+
+LDB 40 --digit3+4 Start HIGH
+CPY 01 00
+STQ 02
+
+LDB 07 --digit3+4 Start LOW
+CPY 01 00
+STQ 03
+
+LDB H(STRINGTONUM)
+CPY 01 04
+LDB L(STRINGTONUM)
+CPY 01 05
+JMP FF
+
+.DUMPEND
+STQ FE
+LDQ 06 -- 06 is the high val
+CPY 00 04
+LDQ 05
+CPY 00 05 --05 is low val
+LDA 00 -- Now REGD is the Intruction and RegA is the data at that value
+STQ 07 -- QR07 now contains the value that was at address
+
+LDB 29 -- The value of ':'
+CPY 01 00
+STQ FF --Print ":" before value
+
+CPY 03 00 --Register D with the instruction
+STQ FF --Print the isntruction at the location
+
+LDB 2A --Value of space
+CPY 01 00
+STQ FF --print the space
+
+LDB 02   --Sets up alu for grabbing left half of #
+CPY 01 00
+STQ FD
+LDQ 07 --Load read number
+CPY 07 00 -- Load value to REG A
+STQ FF
+
+LDB 03 --grabs right half ALU code
+CPY 01 00
+STQ FD -- sets ALUF
+LDQ 07 --Load read number
+CPY 07 00
+STQ FF
+
+LDB 00
+CPY 01 00
+STQ FD --Assign Addition to ALUF
+
+LDB H(DUMPLOOP)
+CPY 01 04
+LDB L(DUMPLOOP)
+CPY 01 05 --Sets HL with address of dumbloop
+
+.DUMPLOOP
+CPY 08 00 --Store keyboard val in A
+LDB FF --Load B with FF(no press)
+JMP 00 --jump to dumb loop
+
+LDB H(QUIT)
+CPY 01 04
+LDB L(QUIT)
+CPY 01 05 --Sets address of QUIT Function
+LDB 1A --Load "Q"
+JMP 00
+
+LDB H(DUMPPLUS)
+CPY 01 04
+LDB L(DUMPPLUS)
+CPY 01 05
+
+LDQ 05
+LDB FF --Check if 255
+JMP 00 --Jump to DUMPPLUS if yes
+LDB 01
+CPY 07 00 --REGA=REGA+01
+STQ 05
+
+LDB H(DUMPEND)
+CPY 01 04
+LDB L(DUMPEND)
+CPY 01 05
+JMP FF
+
+.DUMPPLUS --Increments the upper byte when overflow
+LDB 00
+CPY 01 00
+STQ 05
+LDQ 06
+LDB 01
+CPY 07 00
+STQ 06
+
+LDB H(DUMPEND)
+CPY 01 04
+LDB L(DUMPEND)
+CPY 01 05
+JMP FF
+
+
+
+
+.MOD
+LDB H(MODNEXT)
+CPY 01 00
+STQ 00
+LDB L(MODNEXT)
+CPY 01 00
+STQ 01
+
+LDB 40 --digit1+2 Start HIGH
+CPY 01 00
+STQ 02
+
+LDB 04 --digit1+2 Start LOW
+CPY 01 00
+STQ 03
+
+LDB H(STRINGTONUM)
+CPY 01 04
+LDB L(STRINGTONUM)
+CPY 01 05
+JMP FF
+
+.MODNEXT
+LDQ 05 --Load First 8 bits total
+STQ 06 --Store this in safe keeping
+
+LDB H(PREMODEND)
+CPY 01 00
+STQ 00
+LDB L(PREMODEND)
+CPY 01 00
+STQ 01
+
+LDB 40 --digit3+4 Start HIGH
+CPY 01 00
+STQ 02
+
+LDB 07 --digit3+4 Start LOW
+CPY 01 00
+STQ 03
+
+LDB H(STRINGTONUM)
+CPY 01 04
+LDB L(STRINGTONUM)
+CPY 01 05
+JMP FF
+
+.PREMODEND
+STQ 0B --store A real quick because we need reg A
+LDQ 05
+STQ 07
+LDQ 0B --Get A back
+
+.MODEND
+STQ FE
+LDB 28
+CPY 01 00
+STQ FF
+
+--Looks for a Q or the instruction data
+.MODTYPELOOP1
+CPY 08 00
+LDB H(MODTYPELOOP1)
+CPY 01 04
+LDB L(MODTYPELOOP1)
+CPY 01 05
+LDB FF
+JMP 00
+LDB 2B
+JMP 00
+
+LDB H(QUIT)
+CPY 01 04
+LDB L(QUIT)
+CPY 01 05 --Sets address of QUIT Function
+LDB 1A --Load "Q"
+JMP 00
+
+STQ FF --Print instruction to the screen
+STQ 11 --Store desired input instruction to QR#11
+
+--This will just hold wait and create a space
+LDB H(MODTYPELOOP2)
+CPY 01 04
+LDB L(MODTYPELOOP2)
+CPY 01 05
+.MODTYPELOOP2
+CPY 08 00
+LDB FF
+JMP 00
+
+STQ FF -- Print Space to screen. or dash or any char they use
+
+--This is the first part of data being stored at 09
+LDB H(MODTYPELOOP3)
+CPY 01 04
+LDB L(MODTYPELOOP3)
+CPY 01 05
+.MODTYPELOOP3
+CPY 08 00
+LDB FF
+JMP 00
+
+STQ FF
+STQ 09
+
+--This is the second part of data being stored at 0A
+LDB H(MODTYPELOOP4)
+CPY 01 04
+LDB L(MODTYPELOOP4)
+CPY 01 05
+.MODTYPELOOP4
+CPY 08 00
+LDB FF
+JMP 00
+
+STQ FF
+STQ 0A
+
+
+
+LDB H(SUBMIT)
+CPY 01 00
+STQ 00
+LDB L(SUBMIT)
+CPY 01 00
+STQ 01
+
+LDB 00 --digit1+2 Start HIGH
+CPY 01 00
+STQ 02
+
+LDB 09 --digit1+2 Start LOW
+CPY 01 00
+STQ 03
+
+LDB H(STRINGTONUM)
+CPY 01 04
+LDB L(STRINGTONUM)
+CPY 01 05
+JMP FF
+
+
+
+.SUBMIT
+LDQ 06 -- 06 is the high val
+CPY 00 04
+LDQ 07 — 07 is the low value
+CPY 00 05
+LDQ 11
+CPY 00 03
+LDQ 05
+STO 00 — Store inputted data at location
+
+
+LDB 00
+CPY 01 00
+STQ FD --Assign Addition to ALUF
+
+
+LDB H(MODPLUS)
+CPY 01 04
+LDB L(MODPLUS)
+CPY 01 05
+
+LDQ 07
+LDB FF --Check if 255
+JMP 00 --Jump to MODPLUS if yes
+LDB 01
+CPY 07 00 --REGA=REGA+01
+STQ 07
+
+LDB H(MODEND)
+CPY 01 04
+LDB L(MODEND)
+CPY 01 05
+JMP FF
+
+.MODPLUS --Increments the upper byte when overflow
+LDB 00
+CPY 01 00
+STQ 07
+LDQ 1B
+LDB 01
+CPY 07 00
+STQ 06
+
+LDB H(MODEND)
+CPY 01 04
+LDB L(MODEND)
+CPY 01 05
+JMP FF
+
+.EXEC
+LDB H(EXECNEXT)
+CPY 01 00
+STQ 00
+LDB L(EXECNEXT)
+CPY 01 00
+STQ 01
+
+LDB 40 --digit1+2 Start HIGH
+CPY 01 00
+STQ 02
+
+LDB 04 --digit1+2 Start LOW
+CPY 01 00
+STQ 03
+
+LDB H(STRINGTONUM)
+CPY 01 04
+LDB L(STRINGTONUM)
+CPY 01 05
+JMP FF
+
+.EXECNEXT
+LDQ 05 --Load First digit total
+STQ 06 --Store this in safe keeping 
+
+LDB H(EXECEND)
+CPY 01 00
+STQ 00
+LDB L(EXECEND)
+CPY 01 00
+STQ 01
+
+LDB 40 --digit3+4 Start HIGH
+CPY 01 00
+STQ 02
+
+LDB 07 --digit3+4 Start LOW
+CPY 01 00
+STQ 03
+
+LDB H(STRINGTONUM)
+CPY 01 04
+LDB L(STRINGTONUM)
+CPY 01 05
+JMP FF
+
+.EXECEND
+LDQ 06
+CPY 00 04
+LDQ 05
+CPY 00 05
+JMP FF
+
+
+-- STRING to NUM FUNCTION
+-- RetAddrHigh->QR[00]   RetAddreLow->QR[01]   StrStartHigh->QR[02] StrStartLow->[03]
+-- Uses QR[04] as counter and QR[05] as total
+.STRINGTONUM
+--Store Value of 0 in qr 5 as total value
+LDB 00
+CPY 01 00
+STQ 05
+
+LDQ 02
+CPY 00 04
+LDQ 03
+CPY 00 05
+LDA 00
+
+STQ 04 --Most signifcant digit/counter
+
+.MULTILOOP
+LDB 00 --Add is alu code 00
+CPY 01 00
+STQ FD --Store at ALU memlocation
+
+
+LDB H(MULTIBREAK)
+CPY 01 04
+LDB L(MULTIBREAK)
+CPY 01 05
+
+LDQ 04 --Load counter
+
+LDB 00 
+
+JMP 00 --Jump to end if 16's place is zero
+
+LDB 01 --Subtraction is alu code 01
+CPY 01 00
+STQ FD --Store at ALU memlocation
+
+LDQ 04 --Load counter
+
+LDB 01 --Load 1 to subtract from counter
+
+CPY 07 00
+STQ 04 --write counter-1 value back to quick ram
+
+LDB 00 --Add is alu code 00
+CPY 01 00
+STQ FD --Store at ALU memlocation
+
+LDB 10 --16
+LDQ 05 --Total Value
+
+CPY 07 00
+STQ 05 --Add updated total value
+
+LDQ 04 --Counter
+LDB 00 --zero
+
+JMP 00 --jmp if equal to execbreak
+
+
+
+LDB H(MULTILOOP)
+CPY 01 04
+LDB L(MULTILOOP)
+CPY 01 05
+JMP FF
+
+
+.MULTIBREAK
+--NOW ADD FINAL DIGIT
+
+LDQ 02
+CPY 00 04
+
+LDQ 03
+LDB 01
+CPY 07 00
+CPY 00 05
+
+LDA 00
+CPY 00 01
+
+LDQ 05
+CPY 07 00
+STQ 05
+
+--JUMP to specifed return address
+LDQ 00
+CPY 00 04
+LDQ 01
+CPY 00 05
+
+JMP FF
+
+
+
+
+.PROG
+-- PUTS x0100 into quick ram 2 and 3
+LDB H(WELCOME)
+--Puts higher part of string add in quickram 
+CPY 01 00
+STQ 02
+LDB L(WELCOME)
+CPY 01 00
+--Puts the lower part of the string address in quickram
+STQ 03
+
+--LOAD JUMP ADDRESS FOR STRING FUNCTION
+LDB H(PREINPUT)
+CPY 01 00
+STQ 00
+LDB L(PREINPUT)
+CPY 01 00
+STQ 01
+--Load print address and force JUmp
+LDB H(PRINT)
+CPY 01 04
+LDB L(PRINT)
+CPY 01 05
+JMP FF
+
+
+.PREINPUT
+LDB 00
+CPY 01 00
+STQ FD
+STQ FE --Newline
+LDB 40
+CPY 01 00
+STQ 04
+LDB 01
+CPY 01 00
+STQ 05
+--QR[4]->CURRENTMEMH QR[5]->CURRENTMEML
+.INPUT
+LDB H(INPUT)
+CPY 01 04
+LDB L(INPUT)
+CPY 01 05
+
+CPY 08 00 --Copy keyboard input to RegA
+STQ 06
+LDB FF
+JMP 00
+
+--ADD TYPED CHARACTER TO MEMORY
+LDQ 04
+CPY 00 04
+LDQ 05
+CPY 00 05
+LDQ 06
+STO 00
+
+LDQ 05
+LDB 01
+CPY 07 00
+STQ 05
+
+LDQ 06
+
+--LOAD HL WITH ENTER ADDR AND THEN JUMP IF ENTER
+LDB H(ENTER)
+CPY 01 04
+LDB L(ENTER)
+CPY 01 05
+--2B IS HEX FOR ENTER/RETURN
+LDB 2B
+JMP 00
+
+--OUTPUT TO TERMINAL
+STQ FF
+
+--ALWAYS JUMP BACK TO INPUT
+LDB H(INPUT)
+CPY 01 04
+LDB L(INPUT)
+CPY 01 05
+JMP FF
+
+
+.ENTER
+--LOAD QR4 and QR5 and send to print
+--Send the return address as pre input
+LDB 40
+CPY 01 04
+LDB 01
+CPY 01 05
+LDA 00 --Load the first char value in A
+LDB H(DUMP) --Load value of dump fucntion to HL
+CPY 01 04
+LDB L(DUMP)
+CPY 01 05 --Finish HL setup
+LDB 0D --Character value of 'D'
+JMP 00 --Jump if equal
+
+LDB H(MOD)
+CPY 01 04
+LDB L(MOD)
+CPY 01 05
+LDB 16 --16 is the char value of 'M'
+JMP 00
+
+LDB H(EXEC)
+CPY 01 04
+LDB L(EXEC)
+CPY 01 05
+LDB 0E --0E is the char value of 'E'
+JMP 00
+
+STQ FE --NEW Line
+--BAD - COMMAND unknown
+LDB H(BAD)
+CPY 01 00
+STQ 02
+LDB L(BAD)
+CPY 01 00
+STQ 03
+
+LDB H(PREINPUT) --LINE TO RETURN TO
+CPY 01 00
+STQ 00
+LDB L(PREINPUT) --LINE TO RETURN TO
+CPY 01 00
+STQ 01
+
+LDB H(PRINT) --LABEL OF FUNCTION
+CPY 01 04
+LDB L(PRINT)
+CPY 01 05
+JMP FF
+
+
+NOP FF
+
+.END
+HLT 00
+
